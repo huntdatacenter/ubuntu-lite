@@ -54,9 +54,6 @@ jobs:
         with:
           name: charm
           path: /tmp/charm-builds/ubuntu-lite
-      # Workarounds for https://github.com/actions/upload-artifact/issues/38
-      - run: chmod +x -R /tmp/charm-builds/ubuntu-lite/bin
-      - run: chmod +x -R /tmp/charm-builds/ubuntu-lite/hooks
       - name: Set up LXD
         run: |
           sudo usermod --append --groups lxd $(whoami)
