@@ -4,7 +4,7 @@ Just an Ubuntu image with not much else running.
 
 # Usage
 
-juju deploy ubuntu-lite
+juju deploy huntdatacenter-ubuntu-lite
 
 ## Known Limitations and Issues
 
