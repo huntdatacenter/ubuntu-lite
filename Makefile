@@ -44,12 +44,32 @@ deploy-bionic-bundle: ## Deploy Bionic test bundle
 	tox -e deploy-bionic
 
 
+deploy-focal-bundle: ## Deploy Focal test bundle
+	mkdir -pv /tmp/charm-builds
+	cp -v huntdatacenter-ubuntu-lite_ubuntu-18.04-amd64-arm64_ubuntu-20.04-amd64-arm64_ubuntu-22.04-amd64-arm64.charm /tmp/charm-builds/ubuntu-lite
+	tox -e deploy-focal
+
+
+deploy-jammy-bundle: ## Deploy Jammy test bundle
+	mkdir -pv /tmp/charm-builds
+	cp -v huntdatacenter-ubuntu-lite_ubuntu-18.04-amd64-arm64_ubuntu-20.04-amd64-arm64_ubuntu-22.04-amd64-arm64.charm /tmp/charm-builds/ubuntu-lite
+	tox -e deploy-jammy
+
+
 test-xenial-bundle: ## Test Xenial test bundle
 	tox -e test-xenial
 
 
 test-bionic-bundle: ## Test Bionic test bundle
 	tox -e test-bionic
+
+
+test-focal-bundle: ## Test Focal test bundle
+	tox -e test-focal
+
+
+test-jammy-bundle: ## Test Jammy test bundle
+	tox -e test-jammy
 
 
 push: clean build generate-repo-info ## Push charm to stable channel
