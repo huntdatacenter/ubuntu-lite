@@ -6,23 +6,23 @@ on:
     branches: master
 jobs:
   lint:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v1
-      - uses: actions/setup-python@v1
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
         with:
-          python-version: '3.x'
-      - run: pip install tox
+          python-version: '3.10'
+      - run: python3 -m pip install tox
       - name: Run linter
         run: make lint
   build:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v1
-      - uses: actions/setup-python@v1
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
         with:
-          python-version: '3.7.x'
-      - run: pip install tox
+          python-version: '3.10'
+      - run: python3 -m pip install tox
       - name: Build charm
         run: make build
       - name: Upload charm artifact
@@ -31,26 +31,26 @@ jobs:
           name: charm
           path: /tmp/charm-builds/ubuntu-lite
   test:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     needs: build
     strategy:
       fail-fast: false
       matrix:
         juju_channel:
-          - 2.5/stable
-          - 2.6/stable
-          - 2.7/stable
+          - 2.8/stable
+          - 2.9/stable
+          - 3.0/stable
         test_bundles:
-          - xenial-bundle
-          - bionic-bundle
+          - focal-bundle
+          - jammy-bundle
     steps:
-      - uses: actions/checkout@v1
-      - uses: actions/setup-python@v1
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
         with:
-          python-version: '3.7.x'
-      - run: pip install tox
+          python-version: '3.10'
+      - run: python3 -m pip install tox
       - name: Download charm artifact
-        uses: actions/download-artifact@v1
+        uses: actions/download-artifact@v3
         with:
           name: charm
           path: /tmp/charm-builds/ubuntu-lite
