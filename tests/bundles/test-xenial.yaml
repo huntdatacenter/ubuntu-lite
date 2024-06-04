@@ -1,9 +1,0 @@
-# Jujuna test bundle
----
-ubuntu:
-  service:
-    ssh:
-      status: 'running'
-  network:
-    port:
-      '22': True
