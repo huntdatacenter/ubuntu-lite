@@ -2,5 +2,5 @@ series: focal
 
 applications:
   ubuntu:
-    charm: /tmp/charm-builds/ubuntu-lite
+    charm: ../../ubuntu-lite.charm
     num_units: 1

@@ -1,16 +1,17 @@
 # Use one shell for all commands in a target recipe
 .ONESHELL:
+.EXPORT_ALL_VARIABLES:
 # Set default goal
 .DEFAULT_GOAL := help
 # Use bash shell in Make instead of sh
 SHELL := /bin/bash
 # Charm variables
-CHARM_NAME := ubuntu-lite
+CHARM_NAME := ubuntu-lite.charm
+CHARMHUB_NAME := huntdatacenter-ubuntu-lite
 CHARM_STORE_URL := cs:~huntdatacenter/ubuntu-lite
 CHARM_HOMEPAGE := https://github.com/huntdatacenter/ubuntu-lite/
 CHARM_BUGS_URL := https://github.com/huntdatacenter/ubuntu-lite/issues
 CHARM_BUILD_DIR ?= /tmp/charm-builds
-CHARM_PATH ?= $(CHARM_BUILD_DIR)/$(CHARM_NAME)
 # Jujuna variables - can be overrided by env
 TIMEOUT ?= 600
 ERROR_TIMEOUT ?= 60
@@ -58,38 +59,46 @@ destroy:  ## Destroy the VM
 lint: ## Run linter
 	tox -e lint
 
-build: ## Build charm
-	tox -e build
+clean:  ## Remove artifacts
+	charmcraft clean --verbose
+	rm -vf $(CHARM_BUILD) $(CHARM_NAME)
+
+$(CHARM_BUILD):
+	charmcraft pack --verbose
+
+$(CHARM_NAME): $(CHARM_BUILD)
+	mv -v $(CHARM_BUILD) $(CHARM_NAME)
+
+build: $(CHARM_NAME)  ## Build charm
+
+clean-build: $(CHARM_NAME)  ## Build charm from scratch
 
 deploy: ## Deploy charm
-	juju deploy $(CHARM_BUILD_DIR)/$(CHARM_NAME)
+	juju deploy ./$(CHARM_NAME)
+
+login:
+	bash -c "test -s ~/.charmcraft-auth || charmcraft login --export ~/.charmcraft-auth"
+
+release: login  ## Release charm
+	@echo "# -- Releasing charm: https://charmhub.io/$(CHARMHUB_NAME)"
+	$(eval CHARMCRAFT_AUTH := $(shell cat ~/.charmcraft-auth))
+	charmcraft upload --name $(CHARMHUB_NAME) --release latest/stable $(CHARM_NAME)
 
 upgrade: ## Upgrade charm
-	juju upgrade-charm $(CHARM_NAME) --path $(CHARM_BUILD_DIR)/$(CHARM_NAME)
+	juju upgrade-charm $(CHARM_NAME) --path ./$(CHARM_NAME)
 
 force-upgrade: ## Force upgrade charm
-	juju upgrade-charm $(CHARM_NAME) --path $(CHARM_BUILD_DIR)/$(CHARM_NAME) --force-units
+	juju upgrade-charm $(CHARM_NAME) --path ./$(CHARM_NAME) --force-units
 
-deploy-xenial-bundle: ## Deploy Xenial test bundle
-	tox -e deploy-xenial
-
-deploy-bionic-bundle: ## Deploy Bionic test bundle
-	tox -e deploy-bionic
 
 deploy-focal-bundle: ## Deploy Focal test bundle
-	mkdir -pv /tmp/charm-builds
-	cp -v huntdatacenter-ubuntu-lite_ubuntu-20.04-amd64-arm64_ubuntu-22.04-amd64-arm64_ubuntu-24.04-amd64-arm64.charm /tmp/charm-builds/ubuntu-lite
-	tox -e deploy-focal
+	juju deploy ./tests/bundles/focal.yaml
 
 deploy-jammy-bundle: ## Deploy Jammy test bundle
-	mkdir -pv /tmp/charm-builds
-	cp -v huntdatacenter-ubuntu-lite_ubuntu-20.04-amd64-arm64_ubuntu-22.04-amd64-arm64_ubuntu-24.04-amd64-arm64.charm /tmp/charm-builds/ubuntu-lite
-	tox -e deploy-jammy
+	juju deploy ./tests/bundles/jammy.yaml
 
 deploy-noble-bundle: ## Deploy Noble test bundle
-	mkdir -pv /tmp/charm-builds
-	cp -v huntdatacenter-ubuntu-lite_ubuntu-20.04-amd64-arm64_ubuntu-22.04-amd64-arm64_ubuntu-24.04-amd64-arm64.charm /tmp/charm-builds/ubuntu-lite
-	tox -e deploy-noble
+	juju deploy ./tests/bundles/noble.yaml
 
 
 test-focal-bundle: ## Test Focal test bundle
@@ -102,22 +111,6 @@ test-noble-bundle: ## Test Noble test bundle
 	tox -e test-noble
 
 
-push: clean build generate-repo-info ## Push charm to stable channel
-	@echo "Publishing $(CHARM_STORE_URL)"
-	@export rev=$$(charm push $(CHARM_PATH) $(CHARM_STORE_URL) 2>&1 \
-		| tee /dev/tty | grep url: | cut -f 2 -d ' ') \
-	&& charm release --channel stable $$rev \
-	&& charm grant $$rev --acl read everyone \
-	&& charm set $$rev extra-info=$$(git rev-parse --short HEAD) \
-		bugs-url=$(CHARM_BUGS_URL) homepage=$(CHARM_HOMEPAGE)
-
-
-clean: ## Clean .tox and build
-	@echo "Cleaning files"
-	@if [ -d $(CHARM_PATH) ] ; then rm -r $(CHARM_PATH) ; fi
-	@if [ -d .tox ] ; then rm -r .tox ; fi
-
-
 # Internal targets
 clean-repo:
 	@if [ -n "$$(git status --porcelain)" ]; then \
@@ -125,15 +118,6 @@ clean-repo:
 		git reset --hard; \
 		git clean -fdx; \
 	fi
-
-
-generate-repo-info:
-	@if [ -f $(CHARM_PATH)/repo-info ] ; then rm -r $(CHARM_PATH)/repo-info ; fi
-	@echo "commit: $$(git rev-parse HEAD)" >> $(CHARM_PATH)/repo-info
-	@echo "commit-short: $$(git rev-parse --short HEAD)" >> $(CHARM_PATH)/repo-info
-	@echo "branch: $$(git rev-parse --abbrev-ref HEAD)" >> $(CHARM_PATH)/repo-info
-	@echo "remote: $$(git config --get remote.origin.url)" >> $(CHARM_PATH)/repo-info
-	@echo "generated: $$(date -u)" >> $(CHARM_PATH)/repo-info
 
 
 # Display target comments in 'make help'

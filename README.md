@@ -14,3 +14,12 @@ as I could make it.
 # Configuration
 
 None
+
+# Development
+
+```bash
+make up
+make build
+make deploy
+make release
+```
