@@ -15,61 +15,91 @@ CHARM_PATH ?= $(CHARM_BUILD_DIR)/$(CHARM_NAME)
 TIMEOUT ?= 600
 ERROR_TIMEOUT ?= 60
 
+# Multipass variables
+UBUNTU_VERSION = jammy
+MOUNT_TARGET = /home/ubuntu/vagrant
+DIR_NAME = "$(shell basename $(shell pwd))"
+VM_NAME = juju-dev--$(DIR_NAME)
+
+name:  ## Print name of the VM
+	echo "$(VM_NAME)"
+
+list:  ## List existing VMs
+	multipass list
+
+launch:
+	multipass launch $(UBUNTU_VERSION) -v --timeout 3600 --name $(VM_NAME) --memory 4G --cpus 4 --disk 20G --cloud-init juju.yaml \
+	&& multipass exec $(VM_NAME) -- cloud-init status
+
+mount:
+	echo "Assure allowed in System settings > Privacy > Full disk access for multipassd"
+	multipass mount --type 'classic' --uid-map $(shell id -u):1000 --gid-map $(shell id -g):1000 $(PWD) $(VM_NAME):$(MOUNT_TARGET)
+
+umount:
+	multipass umount $(VM_NAME):$(MOUNT_TARGET)
+
+bootstrap:
+	$(eval ARCH := $(shell multipass exec $(VM_NAME) -- dpkg --print-architecture))
+	multipass exec $(VM_NAME) -- juju bootstrap localhost lxd --bootstrap-constraints arch=$(ARCH) \
+	&& multipass exec $(VM_NAME) -- juju add-model default
+
+ssh:  ## Connect into the VM
+	multipass exec -d $(MOUNT_TARGET) $(VM_NAME) -- bash --login
+
+up: launch mount bootstrap ssh  ## Start a VM
+
+down:  ## Stop the VM
+	multipass delete -v $(VM_NAME)
+
+destroy:  ## Destroy the VM
+	multipass delete -v --purge $(VM_NAME)
+
 
 lint: ## Run linter
 	tox -e lint
 
-
 build: ## Build charm
 	tox -e build
-
 
 deploy: ## Deploy charm
 	juju deploy $(CHARM_BUILD_DIR)/$(CHARM_NAME)
 
-
 upgrade: ## Upgrade charm
 	juju upgrade-charm $(CHARM_NAME) --path $(CHARM_BUILD_DIR)/$(CHARM_NAME)
-
 
 force-upgrade: ## Force upgrade charm
 	juju upgrade-charm $(CHARM_NAME) --path $(CHARM_BUILD_DIR)/$(CHARM_NAME) --force-units
 
-
 deploy-xenial-bundle: ## Deploy Xenial test bundle
 	tox -e deploy-xenial
-
 
 deploy-bionic-bundle: ## Deploy Bionic test bundle
 	tox -e deploy-bionic
 
-
 deploy-focal-bundle: ## Deploy Focal test bundle
 	mkdir -pv /tmp/charm-builds
-	cp -v huntdatacenter-ubuntu-lite_ubuntu-18.04-amd64-arm64_ubuntu-20.04-amd64-arm64_ubuntu-22.04-amd64-arm64.charm /tmp/charm-builds/ubuntu-lite
+	cp -v huntdatacenter-ubuntu-lite_ubuntu-20.04-amd64-arm64_ubuntu-22.04-amd64-arm64_ubuntu-24.04-amd64-arm64.charm /tmp/charm-builds/ubuntu-lite
 	tox -e deploy-focal
-
 
 deploy-jammy-bundle: ## Deploy Jammy test bundle
 	mkdir -pv /tmp/charm-builds
-	cp -v huntdatacenter-ubuntu-lite_ubuntu-18.04-amd64-arm64_ubuntu-20.04-amd64-arm64_ubuntu-22.04-amd64-arm64.charm /tmp/charm-builds/ubuntu-lite
+	cp -v huntdatacenter-ubuntu-lite_ubuntu-20.04-amd64-arm64_ubuntu-22.04-amd64-arm64_ubuntu-24.04-amd64-arm64.charm /tmp/charm-builds/ubuntu-lite
 	tox -e deploy-jammy
 
-
-test-xenial-bundle: ## Test Xenial test bundle
-	tox -e test-xenial
-
-
-test-bionic-bundle: ## Test Bionic test bundle
-	tox -e test-bionic
+deploy-noble-bundle: ## Deploy Noble test bundle
+	mkdir -pv /tmp/charm-builds
+	cp -v huntdatacenter-ubuntu-lite_ubuntu-20.04-amd64-arm64_ubuntu-22.04-amd64-arm64_ubuntu-24.04-amd64-arm64.charm /tmp/charm-builds/ubuntu-lite
+	tox -e deploy-noble
 
 
 test-focal-bundle: ## Test Focal test bundle
 	tox -e test-focal
 
-
 test-jammy-bundle: ## Test Jammy test bundle
 	tox -e test-jammy
+
+test-noble-bundle: ## Test Noble test bundle
+	tox -e test-noble
 
 
 push: clean build generate-repo-info ## Push charm to stable channel
