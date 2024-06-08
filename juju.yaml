@@ -7,7 +7,7 @@ packages:
   - gnome-keyring
 
 bootcmd:
-  - printf "[Resolve]\nDNS=1.1.1.1\n" > /etc/systemd/resolved.conf
+  - printf "[Resolve]\nDNS=1.1.1.1\nFallbackDNS=8.8.8.8\n" > /etc/systemd/resolved.conf
   - [systemctl, restart, systemd-resolved]
 
 snap:
