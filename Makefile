@@ -71,7 +71,7 @@ $(CHARM_NAME): $(CHARM_BUILD)
 
 build: $(CHARM_NAME)  ## Build charm
 
-clean-build: $(CHARM_NAME)  ## Build charm from scratch
+clean-build: clean $(CHARM_NAME)  ## Build charm from scratch
 
 deploy: ## Deploy charm
 	juju deploy ./$(CHARM_NAME)
