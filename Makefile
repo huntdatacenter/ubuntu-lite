@@ -17,7 +17,7 @@ TIMEOUT ?= 600
 ERROR_TIMEOUT ?= 60
 
 # Multipass variables
-UBUNTU_VERSION = noble
+UBUNTU_VERSION = jammy
 MOUNT_TARGET = /home/ubuntu/vagrant
 DIR_NAME = "$(shell basename $(shell pwd))"
 VM_NAME = juju-dev--$(DIR_NAME)
