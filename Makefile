@@ -7,6 +7,7 @@
 SHELL := /bin/bash
 # Charm variables
 CHARM_NAME := ubuntu-lite.charm
+CHARM_BUILD := huntdatacenter-ubuntu-lite_ubuntu-22.04-amd64-arm64_ubuntu-24.04-amd64-arm64_ubuntu-26.04-amd64-arm64.charm
 CHARMHUB_NAME := huntdatacenter-ubuntu-lite
 CHARM_STORE_URL := cs:~huntdatacenter/ubuntu-lite
 CHARM_HOMEPAGE := https://github.com/huntdatacenter/ubuntu-lite/
@@ -74,7 +75,8 @@ build: $(CHARM_NAME)  ## Build charm
 clean-build: clean $(CHARM_NAME)  ## Build charm from scratch
 
 deploy: ## Deploy charm
-	juju deploy ./$(CHARM_NAME)
+	$(eval ARCH := $(shell dpkg --print-architecture))
+	juju deploy --constraints arch=$(ARCH) ./$(CHARM_NAME)
 
 login:
 	bash -c "test -s ~/.charmcraft-auth || charmcraft login --export ~/.charmcraft-auth"
@@ -100,6 +102,10 @@ deploy-jammy-bundle: ## Deploy Jammy test bundle
 deploy-noble-bundle: ## Deploy Noble test bundle
 	juju deploy ./tests/bundles/noble.yaml
 
+deploy-resolute-bundle: ## Deploy Resolute test bundle
+	$(eval ARCH := $(shell dpkg --print-architecture))
+	juju deploy ./tests/bundles/resolute-$(ARCH).yaml
+
 
 test-focal-bundle: ## Test Focal test bundle
 	tox -e test-focal
@@ -109,6 +115,9 @@ test-jammy-bundle: ## Test Jammy test bundle
 
 test-noble-bundle: ## Test Noble test bundle
 	tox -e test-noble
+
+test-resolute-bundle: ## Test Resolute test bundle
+	tox -e test-resolute
 
 
 # Internal targets

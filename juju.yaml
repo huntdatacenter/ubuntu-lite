@@ -60,7 +60,7 @@ runcmd:
     sudo -u ubuntu HOME=/home/ubuntu bash -c "curl -LsSf https://astral.sh/uv/install.sh -o /tmp/uv.sh && sh /tmp/uv.sh"
     sudo -u ubuntu mkdir -p /home/ubuntu/.local/share/juju
     sudo -u ubuntu HOME=/home/ubuntu juju
-    sudo -u ubuntu bash -c "echo alias watch-juju=\'watch -n 3 juju status --relations --storage\' >> /home/ubuntu/.bashrc"
+    sudo -u ubuntu bash -c "echo alias watch-juju=\'watch --color -n 3 juju status --color --relations --storage\' >> /home/ubuntu/.bashrc"
     sudo -u ubuntu bash -c "echo '[ -z "\$TMUX" ] && exec tmux new-session -A -s workspace' >> /home/ubuntu/.bashrc"
     sudo -u ubuntu bash -c "echo 'set -g mouse on' >> /home/ubuntu/.tmux.conf"
 
