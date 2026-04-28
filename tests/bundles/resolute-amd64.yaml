@@ -1,0 +1,14 @@
+machines:
+  "0":
+    constraints: "arch=amd64"
+    base: ubuntu@26.04
+
+default-base: ubuntu@26.04
+
+applications:
+  ubuntu:
+    charm: ../../ubuntu-lite.charm
+    constraints: "arch=amd64"
+    num_units: 1
+    to:
+      - "0"
